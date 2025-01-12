@@ -10,8 +10,12 @@ wss.on('connection', function connection(ws: WebSocket, request) {
         return
 
     const queryparams = new URLSearchParams(url.split('?')[1]);
-    const token = queryparams.get('token') || null;
-    const decoded = jwt.verify(token, JWT_SECREt)
+    const token = queryparams.get('token');
+    if (!token) {
+        ws.close();
+        return;
+    }
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded || !(decoded as JwtPayload).userId){
         ws.close();
         return;
