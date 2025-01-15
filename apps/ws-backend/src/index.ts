@@ -44,7 +44,7 @@ wss.on('connection', function connection(ws: WebSocket, request) {
         // if type == joinroom then add user to the particular room array and asign a ws 
 
         // if type == leaveroom then remove user from that particular room array 
-        
+
         // if type == chat then create a chat for user in that room in db and usinf the ws connection send or broadcast the message to all the orhte users in that room
     });
 
