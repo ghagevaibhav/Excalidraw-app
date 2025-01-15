@@ -2,13 +2,18 @@
   "name": "db",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {   "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
-  },  
+    "@repo/typescript-config": "workspace:*",
+    "prisma": "6.2.1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "6.2.1"
+  }
 }
