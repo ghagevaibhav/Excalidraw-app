@@ -14,7 +14,7 @@ function authentication(token: string): string | null {
         if (!decoded || typeof decoded === 'string' || !(decoded as JwtPayload).userId) {
             return null;
         }
-        return (decoded as JwtPayload).userId;
+        return decoded.userId;
     } catch (e: any) {
         console.error(`Invalid JWT token: ${e.message}`);
         return null;
