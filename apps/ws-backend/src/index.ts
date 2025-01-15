@@ -11,10 +11,10 @@ function authentication(token: string): string | null {
             return null;
         }
         const decoded = jwt.verify(token, JWT_SECRET);
-        if (!decoded || !(decoded as JwtPayload).userId) {
+        if (!decoded || typeof decoded === 'string' || !(decoded as JwtPayload).userId) {
             return null;
         }
-        return decoded.userId;
+        return (decoded as JwtPayload).userId;
     } catch (e: any) {
         console.error(`Invalid JWT token: ${e.message}`);
         return null;
