@@ -1,15 +1,32 @@
 import express from "express";
 import jwt from 'jsonwebtoken';
 import middlewares from "./middleware";
-import { CreateUserSchema } from "@repo/common/types"
+import { CreateUserSchema, SignInSchema, CreateRoomSchema } from "@repo/common/types"
+import { prismaClient } from "@repo/db/client"
 const app = express();
 
-app.post('/api/v1/signin', (req: any, res: any) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Missing username or password' });
+app.post('/api/v1/signin', async (req: any, res: any) => {
+    const parsedData = SignInSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        console.log(parsedData.error)
+        return res.status(422).json({
+            message: "Invalid Inputs Passed"
+        })
     }
+    try {
 
+        const { username, password } = parsedData.data;
+
+        const user = await prismaClient.user.findUnique({
+            where: {
+                email: parsedData.data.username,
+                password: parsedData.data.password
+            }
+        })
+    }
+    catch(e) {
+
+    }
     // Check if user exists in database
     // If exists, generate JWT token and send back as response
     // If not, send back error message
