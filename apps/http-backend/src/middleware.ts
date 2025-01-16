@@ -1,22 +1,35 @@
-import jwt from 'jsonwebtoken'
+import { Request, Response, NextFunction } from 'express';
+import { JWT_SECRET } from "@repo/backend-common";
+import jwt, { decode } from "jsonwebtoken";
+import { prisma } from '@repo/db/client';
 
-export default async function middleware(req: any, res: any, next: any) {
-    const token = req.headers['authorization'] ?? "";
-    const decoded = jwt.verify(token, '123123');
+export const middleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const token = req.headers["authorization"] ?? "";
 
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Please provide both username and password' });
+    try{
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && typeof decoded !== 'string') {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: decoded.userId
+                }
+            })
+            if(!user){
+                res.status(403).json({
+                    message: "User Does Not Exist Middleware Error"
+                })
+            }
+            // Add user ID to request object
+            req.userId = decoded.userId;
+            next();
+        }
+        else{
+            res.json({message: "Invalid Token"})
+            next();
+        }
+    }   
+    catch(error){
+        res.status(401).json({message: "Invalid or Expired Token"})
+        next();
     }
-
-    // Implement your authentication logic here
-    // For example, you can use a database to check if the provided credentials are valid
-    const user = username
-    if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    req.param.username = user.username;
-
-    next();
 }

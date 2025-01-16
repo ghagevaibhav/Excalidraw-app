@@ -1,8 +1,11 @@
 import express from "express";
 import jwt from 'jsonwebtoken';
-import middlewares from "./middleware";
+import { middleware } from "./middleware";
 import { CreateUserSchema, SignInSchema, CreateRoomSchema } from "@repo/common/types"
-import { prismaClient } from "@repo/db/client"
+import { prisma } from "@repo/db/client"
+import bcrypt from "bcrypt"
+import { JWT_SECRET } from "@repo/backend-common"
+
 const app = express();
 
 app.post('/api/v1/signin', async (req: any, res: any) => {
@@ -14,42 +17,77 @@ app.post('/api/v1/signin', async (req: any, res: any) => {
         })
     }
     try {
-
         const { username, password } = parsedData.data;
+        const user = await prisma.user.findUnique({ where: { email: username } });
+        if (!user) {
+            throw new Error('User not found')
+        }
 
-        const user = await prismaClient.user.findUnique({
-            where: {
-                email: parsedData.data.username,
-                password: parsedData.data.password
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (!result) {
+                throw new Error('Invalid Pasword')
             }
         })
-    }
-    catch(e) {
 
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET)
+
+        return res.json({
+            messgae: "Signed In Successfully",
+            token: token
+        })
     }
-    // Check if user exists in database
-    // If exists, generate JWT token and send back as response
-    // If not, send back error message
-    return res.json({ userId: '123', token: 'your_jwt_token_here' });
+    catch (e) {
+        console.error(e)
+        return res.status(500).json({ message: 'Internal Server Error' })
+    }
 })
 
 app.post('/api/v1/signup', (req: any, res: any) => {
-    const { name, email, username, password } = req.body;
-    if (!name || !email || !username || !password) {
-        return res.status(400).json({ error: 'Missing required fields' });
+
+    const parsedData = CreateUserSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        res.json({
+            message: "Invalid Inputs Passed"
+        })
+        return;
     }
 
-    const userId = 123
+    try {
+        const { username, password, name } = parsedData.data;
+        bcrypt.hash(password, 10, async (err, hash) => {
+            const user = await prisma.user.create({
+                data: {
+                    email: username,
+                    password: hash,
+                    name: name
+                }
+            })
 
-    const token = jwt.sign({ userId }, '123123')
-
-    // Check if user already exists in database
-    // If exists, send back error message
-    // If not, create a new user in the database and send back success message
-    return res.json({ message: 'User created successfully' });
+            const token = jwt.sign(user.id, JWT_SECRET)
+            
+            return res.status(200).json({
+                message: "User created successfully",
+                token: token
+            })
+        })
+    }
+    catch(e) {
+        console.error(e)
+        return res.status(500).json({ message: 'Internal Server Error' })
+    }
 })
 
-app.post('/api/v1/createRoom', middlewares, (req, res) => {
+app.post('/api/v1/createRoom', middleware, (req, res) => {
+
+    const parsedData = CreateRoomSchema.safeParse(req.body);
+    if(!parsedData) {
+        res.status(422).json({
+            message: "Invalid Inputs Passed"
+        })
+        return;
+    }
+
+
 
     res.json({
         roomId: 123
