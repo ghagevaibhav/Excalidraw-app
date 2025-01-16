@@ -64,34 +64,49 @@ app.post('/api/v1/signup', (req: any, res: any) => {
             })
 
             const token = jwt.sign(user.id, JWT_SECRET)
-            
+
             return res.status(200).json({
                 message: "User created successfully",
                 token: token
             })
         })
     }
-    catch(e) {
+    catch (e) {
         console.error(e)
         return res.status(500).json({ message: 'Internal Server Error' })
     }
 })
 
-app.post('/api/v1/createRoom', middleware, (req, res) => {
+app.post('/api/v1/createRoom', middleware, async (req, res) => {
 
     const parsedData = CreateRoomSchema.safeParse(req.body);
-    if(!parsedData) {
+    if (!parsedData.success) {
         res.status(422).json({
             message: "Invalid Inputs Passed"
         })
         return;
     }
 
+    const userId = req.userId;
+    if(!userId) return; // so that we dont assign an empty userId to an admin 
 
+    const {name} = parsedData.data
+    try {
+        const room = await prisma.room.create({
+            data: {
+                slug: name,
+                adminId: userId
+            }
+        })
 
-    res.json({
-        roomId: 123
-    })
+        res.json({
+            roomId: room.id
+        })
+    } catch(e) {
+        res.status(411).json({
+            message: "Room already exists with this name"
+        })
+    }
 })
 
 app.listen(3001);
