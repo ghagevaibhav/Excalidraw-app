@@ -109,4 +109,17 @@ app.post('/api/v1/createRoom', middleware, async (req, res) => {
     }
 })
 
+app.get("/api/v1/chats/:roomId", async (req, res) => {
+    const roomId = Number(req.params.roomId);
+    const chats = prisma.chat.findMany({
+        where: {
+            roomId: roomId
+        },
+        take: 50,
+        orderBy: {
+            id: "desc"
+        }
+    })
+})
+
 app.listen(3001);

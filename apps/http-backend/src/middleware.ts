@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { JWT_SECRET } from "@repo/backend-common";
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { prisma } from '@repo/db/client';
 
 export const middleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
